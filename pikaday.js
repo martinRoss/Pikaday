@@ -196,7 +196,7 @@
 
         // the default output format for `.toString()` and `field` value
         // set in `config` based on if showTime is set
-        format: null,
+        format: 'MM-DD-YYYY',
 
         // an array giving the allowable input format(s).  As with moment,
         // the input formats may be either a single string or an array of strings.
@@ -218,7 +218,7 @@
         maxDate: null,
 
         // number of years either side, or array of upper/lower range
-        yearRange: 10,
+        yearRange: 100,
 
         // show week numbers at head of row
         showWeekNumber: false,
@@ -340,6 +340,19 @@
 
     renderTitle = function(instance, c, year, month, refYear)
     {
+        
+        //set minYear and minMonth - added by Taylor 5/22/15
+        if (instance._o.minDate) {
+            instance._o.minYear = instance._o.minDate.getFullYear();
+            instance._o.minMonth = instance._o.minDate.getMonth();
+        }
+
+        //set maxYear and maxMonth - added by Taylor 5/22/15
+        if (instance._o.maxDate) {
+            instance._o.maxYear = instance._o.maxDate.getFullYear();
+            instance._o.maxMonth = instance._o.maxDate.getMonth();
+        }
+
         var i, j, arr,
             opts = instance._o,
             isMinYear = year === opts.minYear,
@@ -527,7 +540,8 @@
 
         self._onInputChange = function(e)
         {
-            var date;
+            // This conflicts with react's render cycle and having two instances declared at once
+            /*var date;
 
             if (e.firedBy === self) {
                 return;
@@ -544,7 +558,7 @@
             }
             if (!self._v) {
                 self.show();
-            }
+            }*/
         };
 
         self._onInputFocus = function()
@@ -718,7 +732,7 @@
 
             // If no format is given, set based on showTime
             if (opts.format === null) {
-                opts.format = 'YYYY-MM-DD';
+                opts.format = 'MM-DD-YYYY';
                 if (opts.showTime) {
                     opts.format += ' HH:mm:ss';
                 }
@@ -924,6 +938,14 @@
         },
 
         /**
+         * detect if minDate is set
+         */
+        hasMinDate: function()
+        {
+            return !!this._o.minDate;
+        },
+
+        /**
          * change the minDate
          */
         setMinDate: function(value)
@@ -1015,11 +1037,12 @@
 
             if (typeof field.getBoundingClientRect === 'function') {
                 clientRect = field.getBoundingClientRect();
-                left = clientRect.left + window.pageXOffset;
-                top = clientRect.bottom + window.pageYOffset;
+                // Swoop Modifications (22, -10)
+                left = clientRect.left + window.pageXOffset+22;
+                top = clientRect.bottom + window.pageYOffset-10;
             } else {
-                left = pEl.offsetLeft;
-                top  = pEl.offsetTop + pEl.offsetHeight;
+                left = pEl.offsetLeft+22;
+                top  = pEl.offsetTop + pEl.offsetHeight-10;
                 while((pEl = pEl.offsetParent)) {
                     left += pEl.offsetLeft;
                     top  += pEl.offsetTop;
@@ -1044,9 +1067,11 @@
                 top = top - height - field.offsetHeight;
             }
 
-            this.el.style.position = 'absolute';
-            this.el.style.left = left + 'px';
-            this.el.style.top = top + 'px';
+            this.el.style.cssText = [
+                'position: absolute',
+                'left: ' + left + 'px',
+                'top: ' + top + 'px'
+            ].join(';');
         },
 
         /**
